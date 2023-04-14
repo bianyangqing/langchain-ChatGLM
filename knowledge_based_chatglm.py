@@ -110,11 +110,11 @@ if __name__ == "__main__":
     init_cfg(LLM_MODEL, EMBEDDING_MODEL, LLM_HISTORY_LEN)
     vector_store = None
     while not vector_store:
-        filepath = input("Input your local knowledge file path 请输入本地知识文件路径：")
+        filepath = "/content/knowledge1.txt"
         vector_store = init_knowledge_vector_store(filepath)
     history = []
     while True:
-        query = input("Input your question 请输入问题：")
+        query = '怎么解绑银行卡'
         resp, history = get_knowledge_based_answer(query=query,
                                                    vector_store=vector_store,
                                                    chat_history=history)
