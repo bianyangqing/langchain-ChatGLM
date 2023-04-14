@@ -7,8 +7,13 @@ from chatglm_llm import ChatGLM
 import sentence_transformers
 import torch
 import os
+import gradio as gr
 import readline
 
+NOTE = 'V1版本局限性说明 \n' \
+       '1、大模型接口调用较慢，目前流式打字机效果还在调试中，请耐心等待。（如果我们明天打字机出不来的话）\n' \
+       '2、目前饿了么商家知识库数据量还非常小，可能会出现“幻觉”现象并返回不符合事实的信息（尤其是页面配置、url等）。\n' \
+       '3、V2版本计划提升回答的准确性、其他用户体验等。'
 
 # Global Parameters
 EMBEDDING_MODEL = "text2vec"
@@ -34,19 +39,26 @@ llm_model_dict = {
 
 
 def init_cfg(LLM_MODEL, EMBEDDING_MODEL, LLM_HISTORY_LEN, V_SEARCH_TOP_K=6):
-    global chatglm, embeddings, VECTOR_SEARCH_TOP_K
+    global chatglm, embeddings, VECTOR_SEARCH_TOP_K, vector_store_result
     VECTOR_SEARCH_TOP_K = V_SEARCH_TOP_K
 
     chatglm = ChatGLM()
     chatglm.load_model(model_name_or_path=llm_model_dict[LLM_MODEL])
     chatglm.history_len = LLM_HISTORY_LEN
 
-    embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict[EMBEDDING_MODEL],)
+    embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict[EMBEDDING_MODEL], )
     embeddings.client = sentence_transformers.SentenceTransformer(embeddings.model_name,
                                                                   device=DEVICE)
 
+    while not vector_store_result:
+        vector_store_result = init_knowledge_vector_store(os.environ.get('file_path'))
+    return vector_store_result
 
-def init_knowledge_vector_store(filepath:str):
+
+vector_store_result = init_cfg(LLM_MODEL, EMBEDDING_MODEL, LLM_HISTORY_LEN)
+
+
+def init_knowledge_vector_store(filepath: str):
     if not os.path.exists(filepath):
         print("路径不存在")
         return None
@@ -74,7 +86,7 @@ def init_knowledge_vector_store(filepath:str):
     return vector_store
 
 
-def get_knowledge_based_answer(query, vector_store, chat_history=[]):
+def get_knowledge_based_answer(query, chat_history=[]):
     global chatglm, embeddings
 
     prompt_template = """基于以下已知信息，简洁和专业的来回答用户的问题。
@@ -92,12 +104,12 @@ def get_knowledge_based_answer(query, vector_store, chat_history=[]):
     chatglm.history = chat_history
     knowledge_chain = RetrievalQA.from_llm(
         llm=chatglm,
-        retriever=vector_store.as_retriever(search_kwargs={"k": VECTOR_SEARCH_TOP_K}),
+        retriever=vector_store_result.as_retriever(search_kwargs={"k": VECTOR_SEARCH_TOP_K}),
         prompt=prompt
     )
     knowledge_chain.combine_documents_chain.document_prompt = PromptTemplate(
-            input_variables=["page_content"], template="{page_content}"
-        )
+        input_variables=["page_content"], template="{page_content}"
+    )
 
     knowledge_chain.return_source_documents = True
 
@@ -106,19 +118,34 @@ def get_knowledge_based_answer(query, vector_store, chat_history=[]):
     return result, chatglm.history
 
 
-if __name__ == "__main__":
-    init_cfg(LLM_MODEL, EMBEDDING_MODEL, LLM_HISTORY_LEN)
-    vector_store = None
-    while not vector_store:
-        filepath = "/content/knowledge1.txt"
-        vector_store = init_knowledge_vector_store(filepath)
-    history = []
-    while True:
-        query = '怎么解绑银行卡'
-        resp, history = get_knowledge_based_answer(query=query,
-                                                   vector_store=vector_store,
-                                                   chat_history=history)
-        if REPLY_WITH_SOURCE:
-            print(resp)
-        else:
-            print(resp["result"])
+# if __name__ == "__main__":
+#     init_cfg(LLM_MODEL, EMBEDDING_MODEL, LLM_HISTORY_LEN)
+#     vector_store = None
+#     while not vector_store:
+#         filepath = "/content/knowledge1.txt"
+#         vector_store = init_knowledge_vector_store(filepath)
+#     history = []
+#     while True:
+#         query = '怎么解绑银行卡'
+#         resp, history = get_knowledge_based_answer(query=query,
+#                                                    vector_store=vector_store,
+#                                                    chat_history=history)
+#         if REPLY_WITH_SOURCE:
+#             print(resp)
+#         else:
+#             print(resp["result"])
+
+
+with gr.Blocks(css="#chatbot{height:600px} .overflow-y-auto{height:500px}",
+               title="商家小助手",
+               description=NOTE,
+               ) as demo:
+    chatbot = gr.Chatbot(elem_id="chatbot")
+    state = gr.State([])
+    with gr.Row():
+        txt = gr.Textbox(show_label=False, placeholder="Enter text and press enter", label="Question").style(
+            container=False)
+
+    txt.submit(get_knowledge_based_answer, [txt, state], [chatbot, state])
+
+demo.launch(share=True, inbrowser=True)
