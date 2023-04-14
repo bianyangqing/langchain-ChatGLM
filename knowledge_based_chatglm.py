@@ -9,6 +9,8 @@ import torch
 import os
 import gradio as gr
 import readline
+import logging
+logging.basicConfig(level=logging.INFO)
 
 NOTE = 'V1版本局限性说明 \n' \
        '1、大模型接口调用较慢，目前流式打字机效果还在调试中，请耐心等待。（如果我们明天打字机出不来的话）\n' \
@@ -37,22 +39,13 @@ llm_model_dict = {
     "chatglm-6b": "THUDM/chatglm-6b",
 }
 
-
-def init_cfg(LLM_MODEL, EMBEDDING_MODEL, LLM_HISTORY_LEN, V_SEARCH_TOP_K=6):
-    global chatglm, embeddings, VECTOR_SEARCH_TOP_K, vector_store_result
-    VECTOR_SEARCH_TOP_K = V_SEARCH_TOP_K
-
-    chatglm = ChatGLM()
-    chatglm.load_model(model_name_or_path=llm_model_dict[LLM_MODEL])
-    chatglm.history_len = LLM_HISTORY_LEN
-
-    embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict[EMBEDDING_MODEL], )
-    embeddings.client = sentence_transformers.SentenceTransformer(embeddings.model_name,
-                                                                  device=DEVICE)
-
-    while not vector_store_result:
-        vector_store_result = init_knowledge_vector_store(os.environ.get('file_path'))
-
+VECTOR_SEARCH_TOP_K = 6
+chatglm = ChatGLM()
+chatglm.load_model(model_name_or_path=llm_model_dict[LLM_MODEL])
+chatglm.history_len = LLM_HISTORY_LEN
+embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict[EMBEDDING_MODEL], )
+embeddings.client = sentence_transformers.SentenceTransformer(embeddings.model_name,
+                                                              device=DEVICE)
 
 
 def init_knowledge_vector_store(filepath: str):
@@ -83,9 +76,13 @@ def init_knowledge_vector_store(filepath: str):
     return vector_store
 
 
+vector_store_result = init_knowledge_vector_store(os.environ.get('file_path'))
+
+
 def get_knowledge_based_answer(query, chat_history=[]):
     global chatglm, embeddings, vector_store_result
 
+    logging.warning("query:{}".format(query))
     prompt_template = """基于以下已知信息，简洁和专业的来回答用户的问题。
 如果无法从中得到答案，请说 "根据已知信息无法回答该问题" 或 "没有提供足够的相关信息"，不允许在答案中添加编造成分，答案请使用中文。
 
@@ -111,26 +108,9 @@ def get_knowledge_based_answer(query, chat_history=[]):
     knowledge_chain.return_source_documents = True
 
     result = knowledge_chain({"query": query})
+    logging.warning("result:{}".format(result))
     chatglm.history[-1][0] = query
     return result, chatglm.history
-
-
-# if __name__ == "__main__":
-#     init_cfg(LLM_MODEL, EMBEDDING_MODEL, LLM_HISTORY_LEN)
-#     vector_store = None
-#     while not vector_store:
-#         filepath = "/content/knowledge1.txt"
-#         vector_store = init_knowledge_vector_store(filepath)
-#     history = []
-#     while True:
-#         query = '怎么解绑银行卡'
-#         resp, history = get_knowledge_based_answer(query=query,
-#                                                    vector_store=vector_store,
-#                                                    chat_history=history)
-#         if REPLY_WITH_SOURCE:
-#             print(resp)
-#         else:
-#             print(resp["result"])
 
 
 with gr.Blocks(css="#chatbot{height:600px} .overflow-y-auto{height:500px}",
