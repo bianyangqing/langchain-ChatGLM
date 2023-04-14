@@ -13,7 +13,7 @@ import readline
 # Global Parameters
 EMBEDDING_MODEL = "text2vec"
 VECTOR_SEARCH_TOP_K = 6
-LLM_MODEL = "chatglm-6b"
+LLM_MODEL = "chatglm-6b-int4"
 LLM_HISTORY_LEN = 3
 DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
