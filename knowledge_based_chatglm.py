@@ -110,7 +110,7 @@ def get_knowledge_based_answer(query, chat_history=[]):
     result = knowledge_chain({"query": query})
     logging.warning("result:{}".format(result))
     chatglm.history[-1][0] = query
-    return result, chatglm.history
+    return result["result"], [("","")]
 
 
 with gr.Blocks(css="#chatbot{height:600px} .overflow-y-auto{height:500px}",
