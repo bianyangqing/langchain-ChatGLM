@@ -1,6 +1,7 @@
 from langchain import OpenAI, SQLDatabase, SQLDatabaseChain, PromptTemplate
 import os
 from chatglm_llm import ChatGLM
+import gradio as gr
 
 
 
@@ -32,6 +33,24 @@ chatglm.history_len = 3
 
 db_chain = SQLDatabaseChain(llm=chatglm, database=db,
                             prompt = PROMPT_SIMPLE, verbose=True)
-result = db_chain.run(os.environ['question'])
 
-print("final_result:{}".format(result))
+
+
+def get_knowledge_based_answer(query, chat_history=[]):
+    result = db_chain.run(query)
+    print("final_result:{}".format(result))
+    return result
+
+
+
+with gr.Blocks(css="#chatbot{height:600px} .overflow-y-auto{height:500px}"
+               ) as demo:
+    chatbot = gr.Chatbot(elem_id="chatbot")
+    state = gr.State([])
+    with gr.Row():
+        txt = gr.Textbox(show_label=False, placeholder="Enter text and press enter", label="Question").style(
+            container=False)
+
+    txt.submit(get_knowledge_based_answer, [txt, state], [chatbot, state])
+
+demo.launch(share=True, inbrowser=True)
