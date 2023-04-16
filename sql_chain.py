@@ -11,5 +11,5 @@ chatglm.load_model(model_name_or_path="THUDM/chatglm-6b-int4")
 chatglm.history_len = 3
 
 
-db_chain = SQLDatabaseChain(llm=llm, database=db, verbose=True)
+db_chain = SQLDatabaseChain(llm=chatglm, database=db, verbose=True)
 db_chain.run(os.environ['question'])
