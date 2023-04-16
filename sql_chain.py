@@ -2,8 +2,6 @@ from langchain import OpenAI, SQLDatabase, SQLDatabaseChain
 import os
 from chatglm_llm import ChatGLM
 
-os.environ['OPENAI_API_KEY'] = os.environ.get('the_key_you_need')
-
 db = SQLDatabase.from_uri("sqlite:///test.db")
 llm = OpenAI(temperature=0)
 
