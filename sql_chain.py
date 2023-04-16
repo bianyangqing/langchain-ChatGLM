@@ -15,4 +15,4 @@ llm = OpenAI(temperature=0)
 
 
 db_chain = SQLDatabaseChain(llm=llm, database=db, verbose=True)
-db_chain.run("What is the average age of all the employees")
+db_chain.run(os.environ['OPENAI_API_KEY'])
