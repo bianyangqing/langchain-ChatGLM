@@ -13,7 +13,7 @@ Only use the tables listed below.
 Question: {input}"""
 
 PROMPT_SIMPLE = PromptTemplate(
-    input_variables=["input", "table_info", "dialect", "top_k"],
+    input_variables=["input", "table_info", "dialect"],
     template=_DEFAULT_TEMPLATE,
 )
 
