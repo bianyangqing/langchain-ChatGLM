@@ -3,7 +3,7 @@ import os
 # from chatglm_llm import ChatGLM
 # from knowledge_based_chatglm import llm_model_dict, LLM_MODEL, LLM_HISTORY_LEN
 
-os.environ['OPENAI_API_KEY'] = os.environ.get('the_key_you_need')
+# os.environ['OPENAI_API_KEY'] = os.environ.get('the_key_you_need')
 
 db = SQLDatabase.from_uri("sqlite:///test.db")
 llm = OpenAI(temperature=0)
