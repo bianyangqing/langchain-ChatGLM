@@ -40,7 +40,7 @@ class ChatGLM(LLM):
               prompt: str,
               stop: Optional[List[str]] = None) -> str:
 
-        # logging.warning("model:{} received:{}".format(self._llm_type, prompt))
+        logging.warning("model:{} received:{}".format(self._llm_type, prompt))
         response, _ = self.model.chat(
             self.tokenizer,
             prompt,
@@ -48,12 +48,14 @@ class ChatGLM(LLM):
             max_length=self.max_token,
             temperature=self.temperature,
         )
+
+        logging.warning("model:{} response1".format(self._llm_type))
         torch_gc()
         if stop is not None:
             response = enforce_stop_tokens(response, stop)
         self.history = self.history+[[None, response]]
 
-        # logging.warning("model:{} response:{}".format(self._llm_type, response))
+        logging.warning("model:{} response:{}".format(self._llm_type, response))
         return response
 
     def load_model(self, model_name_or_path: str = "THUDM/chatglm-6b"):
