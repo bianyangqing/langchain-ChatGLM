@@ -32,4 +32,6 @@ chatglm.history_len = 3
 
 db_chain = SQLDatabaseChain(llm=chatglm, database=db,
                             prompt = PROMPT_SIMPLE, verbose=True)
-db_chain.run(os.environ['question'])
+result = db_chain.run(os.environ['question'])
+
+print("final_result:{}".format(result))
