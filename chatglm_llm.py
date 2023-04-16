@@ -3,7 +3,11 @@ from typing import Optional, List
 from langchain.llms.utils import enforce_stop_tokens
 from transformers import AutoTokenizer, AutoModel
 import torch
+import logging
 
+
+
+logging.basicConfig(level=logging.INFO)
 DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 DEVICE_ID = "0" if torch.cuda.is_available() else None
 CUDA_DEVICE = f"{DEVICE}:{DEVICE_ID}" if DEVICE_ID else DEVICE
@@ -35,6 +39,8 @@ class ChatGLM(LLM):
     def _call(self,
               prompt: str,
               stop: Optional[List[str]] = None) -> str:
+
+        logging.warning("model:{} received:{}".format(self._llm_type, prompt))
         response, _ = self.model.chat(
             self.tokenizer,
             prompt,
@@ -46,6 +52,8 @@ class ChatGLM(LLM):
         if stop is not None:
             response = enforce_stop_tokens(response, stop)
         self.history = self.history+[[None, response]]
+
+        logging.warning("model:{} response:{}".format(self._llm_type, response))
         return response
 
     def load_model(self, model_name_or_path: str = "THUDM/chatglm-6b"):
