@@ -39,7 +39,7 @@ db_chain = SQLDatabaseChain(llm=chatglm, database=db,
 def get_knowledge_based_answer(query, chat_history=[]):
     result = db_chain.run(query)
     print("final_result:{}".format(result))
-    return result
+    return [(query,result)], [query,result]
 
 
 
