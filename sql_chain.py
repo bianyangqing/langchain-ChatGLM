@@ -4,7 +4,11 @@ from chatglm_llm import ChatGLM
 
 
 
-_DEFAULT_TEMPLATE = """Given an input question, first create a syntactically correct {dialect} query to run
+_DEFAULT_TEMPLATE = """Given an input question,
+
+create a syntactically correct {dialect} query to run
+
+Only return the query without other words
 
 Only use the tables listed below.
 
