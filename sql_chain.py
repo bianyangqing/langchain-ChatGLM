@@ -2,6 +2,7 @@ from langchain import OpenAI, SQLDatabase, SQLDatabaseChain, PromptTemplate
 import os
 from chatglm_llm import ChatGLM
 import gradio as gr
+from db_manager import sqlite3_client
 
 MODEL_NAME_GPT = "chatGpt-3.5"
 
@@ -39,6 +40,7 @@ db_chain_glm = SQLDatabaseChain(llm=chatglm, database=db,
 
 db_chain_gpt = SQLDatabaseChain(llm=llm, database=db, verbose=True)
 
+sqlite3 = sqlite3_client()
 
 
 def get_knowledge_based_answer(query, model_name, chat_history=[]):
