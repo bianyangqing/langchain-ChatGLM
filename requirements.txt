@@ -9,4 +9,3 @@ icetk
 cpm_kernels
 faiss-cpu
 gradio>=3.25.0
-sqlite3
