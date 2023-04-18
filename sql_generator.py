@@ -5,8 +5,9 @@ from langchain import FAISS
 from langchain.document_loaders import UnstructuredFileLoader
 from langchain.embeddings import HuggingFaceEmbeddings
 
+import logging
+logging.basicConfig(level=logging.INFO)
 EMBEDDING_DEVICE = "cpu"
-
 embeddings = HuggingFaceEmbeddings(model_name="GanymedeNil/text2vec-large-chinese", )
 embeddings.client = sentence_transformers.SentenceTransformer(embeddings.model_name,
                                                               device=EMBEDDING_DEVICE)
@@ -41,4 +42,4 @@ def init_knowledge_vector_store(filepath: str):
 
 
 vector_store = init_knowledge_vector_store("/content/knowledge1.txt")
-vector_store.similarity_search("中国流行的美国发钱的段子")
+logging.warning("similarity_search:{}".format(vector_store.similarity_search("中国流行的美国发钱的段子")))
